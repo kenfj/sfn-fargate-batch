@@ -184,9 +184,28 @@ resource "aws_sfn_state_machine" "batch" {
 DEFINITION
 
   depends_on = [
-    "aws_iam_role.step_functions_execution",
-    "aws_iam_role_policy.step_functions_execution",
+    # note this direct dependency setting does not work
+    # "aws_iam_role_policy.step_functions_execution",
+    "null_resource.delay",
   ]
+}
+
+# Initial run will fail due to the timing issue
+# * aws_sfn_state_machine.batch: Error creating Step Function State Machine:
+# AccessDeniedException: Neither the global service principal states.amazonaws.com,
+# nor the regional one is authorized to assume the provided role.
+# https://github.com/hashicorp/terraform/issues/2869
+# Therefore wait 10 seconds
+# https://github.com/hashicorp/terraform/issues/17726#issuecomment-377357866
+
+resource "null_resource" "delay" {
+  provisioner "local-exec" {
+    command = "sleep 10"
+  }
+
+  triggers = {
+    "before" = "${aws_iam_role_policy.step_functions_execution.id}"
+  }
 }
 
 ##############################
