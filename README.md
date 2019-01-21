@@ -3,6 +3,8 @@
 * Terraform Fargate batch job example using Step Functions
 * based on the official sample `Manage a Container Task (ECS, SNS)`
 * plus adding ECR image and CloudWatch Logs to check the batch output
+* demo using execution input to set environment variable for container
+* also using SNS to notify the result of the task
 
 
 ## How to run
@@ -88,3 +90,7 @@ aws ecs describe-clusters --clusters tf-example-app
 * some note when you create new state machine
   - https://stackoverflow.com/questions/44402401
 * https://hackernoon.com/incorporate-aws-fargate-into-step-functions-8003d688d027
+* Manage Amazon ECS/Fargate Tasks With Step Functions
+  - https://docs.aws.amazon.com/step-functions/latest/dg/connectors-ecs.html
+* Pass Parameters to a Service API
+  - https://docs.aws.amazon.com/step-functions/latest/dg/connectors-parameters.html

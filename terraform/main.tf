@@ -177,7 +177,13 @@ resource "aws_sfn_state_machine" "batch" {
         },
         "NetworkConfiguration": ${data.template_file.network_config.rendered}
       },
-      "Next": "Fargate Task 2"
+      "Next": "Fargate Task 2",
+      "Catch": [
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "Next": "Notify Failure"
+          }
+      ]
     },
     "Fargate Task 2": {
       "Type": "Task",
@@ -188,11 +194,30 @@ resource "aws_sfn_state_machine" "batch" {
         "TaskDefinition": "${aws_ecs_task_definition.batch2.arn}",
         "NetworkConfiguration": ${data.template_file.network_config.rendered}
       },
-      "Next": "HelloWorld"
+      "Next": "Notify Success",
+      "Catch": [
+          {
+            "ErrorEquals": [ "States.ALL" ],
+            "Next": "Notify Failure"
+          }
+      ]
     },
-    "HelloWorld": {
-      "Type": "Pass",
-      "Result": "Hello World!",
+    "Notify Success": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": "AWS Fargate Task started by Step Functions succeeded",
+        "TopicArn": "${aws_sns_topic.batch.arn}"
+      },
+      "End": true
+    },
+    "Notify Failure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": "AWS Fargate Task started by Step Functions failed",
+        "TopicArn": "${aws_sns_topic.batch.arn}"
+      },
       "End": true
     }
   }
@@ -299,8 +324,21 @@ resource "aws_iam_role_policy" "step_functions_execution" {
                 "arn:aws:iam::${data.aws_caller_identity.self.account_id}:role/${local.name}-ecsTaskExecutionRole"
             ],
             "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "sns:Publish"
+            ],
+            "Resource": [
+                "${aws_sns_topic.batch.arn}"
+            ],
+            "Effect": "Allow"
         }
     ]
 }
 EOF
+}
+
+resource "aws_sns_topic" "batch" {
+  name = "${local.name}"
 }
