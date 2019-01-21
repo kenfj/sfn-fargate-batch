@@ -6,6 +6,10 @@
 * demo using execution input to set environment variable for container
 * also using SNS to notify the result of the task
 
+<p align="center">
+<img src="https://user-images.githubusercontent.com/44661517/51458486-a7dca300-1d98-11e9-989d-afb0e4a7877f.png" width="300">
+</p>
+
 
 ## How to run
 
