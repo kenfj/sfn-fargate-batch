@@ -162,6 +162,19 @@ resource "aws_sfn_state_machine" "batch" {
         "LaunchType": "FARGATE",
         "Cluster": "${aws_ecs_cluster.batch.arn}",
         "TaskDefinition": "${aws_ecs_task_definition.batch.arn}",
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "${local.name}",
+              "Environment": [
+                {
+                  "Name": "NAME",
+                  "Value.$": "$.Comment"
+                }
+              ]
+            }
+          ]
+        },
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
             "Subnets": [

@@ -38,13 +38,10 @@ export BATCH_REPO_URL=$(terraform output batch_repository_url)
 * next build and push simple docker image for Fargate batch job
 
 ```bash
-cd batch-job
-
-# build docker image
-docker build -t my-python-batch .
-
-# check if it is working
-docker run --rm my-python-batch
+cd batch-job                        # success rate 50%
+docker build -t my-python-batch .   # build docker image
+docker run --rm my-python-batch     # check if it is working
+docker run --rm --env NAME=foo my-python-batch  # hello foo!
 
 # push to ECR
 $(aws ecr get-login --region ap-northeast-1 --no-include-email)
@@ -56,6 +53,12 @@ aws ecr list-images --repository-name ${BATCH_REPO_NAME}
 ```
 
 * go to Step Functions > State Machines and click Start Execution
+* in New execution, the Input will be set the environment variable
+```
+{
+    "Comment": "Insert your JSON here"
+}
+```
 * go to CloudWatch > Logs > Filter: `/ecs/${BATCH_REPO_NAME}`
 * click the Log Streams to see the batch job output
 
