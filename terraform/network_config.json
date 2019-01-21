@@ -1,0 +1,9 @@
+{
+  "AwsvpcConfiguration": {
+    "Subnets": [
+      "${subnet1}",
+      "${subnet2}"
+    ],
+    "AssignPublicIp": "ENABLED"
+  }
+}

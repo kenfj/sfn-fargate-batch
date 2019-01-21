@@ -153,9 +153,9 @@ resource "aws_sfn_state_machine" "batch" {
   definition = <<DEFINITION
 {
   "Comment": "A Hello World example of the Amazon States Language using a Pass state",
-  "StartAt": "Amazon ECS: Manage a task",
+  "StartAt": "Fargate Task 1",
   "States": {
-    "Amazon ECS: Manage a task": {
+    "Fargate Task 1": {
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
       "Parameters": {
@@ -175,15 +175,18 @@ resource "aws_sfn_state_machine" "batch" {
             }
           ]
         },
-        "NetworkConfiguration": {
-          "AwsvpcConfiguration": {
-            "Subnets": [
-              "${aws_subnet.batch1.id}",
-              "${aws_subnet.batch2.id}"
-            ],
-            "AssignPublicIp": "ENABLED"
-          }
-        }
+        "NetworkConfiguration": ${data.template_file.network_config.rendered}
+      },
+      "Next": "Fargate Task 2"
+    },
+    "Fargate Task 2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "Cluster": "${aws_ecs_cluster.batch.arn}",
+        "TaskDefinition": "${aws_ecs_task_definition.batch2.arn}",
+        "NetworkConfiguration": ${data.template_file.network_config.rendered}
       },
       "Next": "HelloWorld"
     },
@@ -218,6 +221,15 @@ resource "null_resource" "delay" {
 
   triggers = {
     "before" = "${aws_iam_role_policy.step_functions_execution.id}"
+  }
+}
+
+data "template_file" "network_config" {
+  template = "${file("network_config.json")}"
+
+  vars {
+    subnet1 = "${aws_subnet.batch1.id}"
+    subnet2 = "${aws_subnet.batch2.id}"
   }
 }
 
@@ -256,7 +268,8 @@ resource "aws_iam_role_policy" "step_functions_execution" {
                 "ecs:RunTask"
             ],
             "Resource": [
-                "${aws_ecs_task_definition.batch.arn}"
+                "${aws_ecs_task_definition.batch.arn}",
+                "${aws_ecs_task_definition.batch2.arn}"
             ]
         },
         {
